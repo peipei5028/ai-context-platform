@@ -60,6 +60,7 @@ from app.api.graph import router as graph_router  # noqa: E402
 from app.api.documents import router as documents_router  # noqa: E402
 from app.api.tokens import router as tokens_router  # noqa: E402
 from app.api.admin import router as admin_router  # noqa: E402
+from app.api.code import router as code_router  # noqa: E402
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(systems_router, prefix="/api/v1")
@@ -71,3 +72,4 @@ app.include_router(graph_router, prefix="/api/v1")
 app.include_router(documents_router, prefix="/api/v1")
 app.include_router(tokens_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
+app.include_router(code_router, prefix="/api/v1")

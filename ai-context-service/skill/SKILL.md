@@ -37,6 +37,7 @@ TOKEN=$(curl -s -X POST $BASE_URL/auth/login -H 'Content-Type: application/json'
 - **代码搜索**: curl -X POST -H "Authorization: Bearer $TOKEN" $BASE_URL/apps/{id}/search -H 'Content-Type: application/json' -d '{"query":"支付处理","mode":"hybrid","limit":20}'
 - **获取Wiki目录**: curl -H "Authorization: Bearer $TOKEN" $BASE_URL/apps/{id}/wiki
 - **获取Wiki模块内容**: curl -H "Authorization: Bearer $TOKEN" $BASE_URL/apps/{id}/wiki/{module}
+- **跨仓库读源码**: curl -X POST -H "Authorization: Bearer $TOKEN" $BASE_URL/code/read -H 'Content-Type: application/json' -d '{"items":[{"app_id":"app-payment","ref":"main","path":"src/service/PaymentService.java","start_line":1,"end_line":200}],"max_bytes_per_file":65536}'
 
 ### 文档
 - **系统文档列表**: curl -H "Authorization: Bearer $TOKEN" $BASE_URL/systems/{id}/documents
@@ -50,3 +51,5 @@ TOKEN=$(curl -s -X POST $BASE_URL/auth/login -H 'Content-Type: application/json'
 3. 影响分析结果应包含风险等级、受影响范围和测试建议
 4. Wiki 内容包含 Mermaid 架构图，直接渲染给用户
 5. 如果 APP 未索引（index_status=none），提示用户先触发索引
+6. 跨仓库读源码支持批量读取多个 APP 的文件，可通过 start_line/end_line 指定行号范围，适合定位具体代码片段
+7. 读源码时先通过查看系统列表或APP详情获取 app_id，再按路径读取，结果中包含 resolved_commit 用于溯源

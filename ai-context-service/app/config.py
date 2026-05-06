@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     # Encryption (AES-256-GCM for GitLab credentials)
     GITLAB_ENCRYPTION_KEY: str = "change-me-32-bytes-aes-key!!!!"
 
+    # Code read limits
+    CODE_READ_MAX_BYTES: int = 65536  # 64KB per file
+    CODE_READ_MAX_ITEMS: int = 20     # max items per batch request
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
