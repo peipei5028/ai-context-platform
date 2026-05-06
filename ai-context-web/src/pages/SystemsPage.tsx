@@ -67,9 +67,9 @@ export default function SystemsPage() {
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const resp = (err as { response?: { data?: { message?: string } } }).response
-        setCreateError(resp?.data?.message || 'Creation failed')
+        setCreateError(resp?.data?.message || '创建失败')
       } else {
-        setCreateError('Network error, please try again later')
+        setCreateError('网络错误，请稍后重试')
       }
     } finally {
       setCreating(false)
@@ -89,29 +89,29 @@ export default function SystemsPage() {
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">System Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">系统管理</h1>
           <button
             onClick={openModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md px-4 py-2 text-sm transition-colors cursor-pointer"
           >
-            + New System
+            + 新建系统
           </button>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="text-center py-20 text-gray-400">Loading...</div>
+          <div className="text-center py-20 text-gray-400">加载中...</div>
         )}
 
         {/* Empty state */}
         {!loading && systems.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-gray-400 mb-4">No systems yet</p>
+            <p className="text-gray-400 mb-4">暂无系统</p>
             <button
               onClick={openModal}
               className="text-indigo-600 hover:text-indigo-700 text-sm font-medium cursor-pointer"
             >
-              Create your first system
+              创建你的第一个系统
             </button>
           </div>
         )}
@@ -127,14 +127,14 @@ export default function SystemsPage() {
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">{sys.name}</h2>
                 <p className="text-gray-500 text-sm mb-4 line-clamp-2">
-                  {sys.description || 'No description'}
+                  {sys.description || '暂无描述'}
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">
-                    Created: {formatDate(sys.created_at)}
+                    创建于: {formatDate(sys.created_at)}
                   </span>
                   <span className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                    View Details
+                    查看详情
                   </span>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function SystemsPage() {
           <div className="bg-white rounded-xl max-w-lg w-full mx-4 mt-20 p-6">
             {/* Modal header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">New System</h2>
+              <h2 className="text-lg font-semibold text-gray-900">新建系统</h2>
               <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -169,7 +169,7 @@ export default function SystemsPage() {
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label htmlFor="sys-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  System Name <span className="text-red-500">*</span>
+                  系统名称 <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="sys-name"
@@ -178,13 +178,13 @@ export default function SystemsPage() {
                   onChange={(e) => setFormName(e.target.value)}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Please enter system name"
+                  placeholder="请输入系统名称"
                 />
               </div>
 
               <div>
                 <label htmlFor="sys-desc" className="block text-sm font-medium text-gray-700 mb-1">
-                  System Description
+                  系统描述
                 </label>
                 <textarea
                   id="sys-desc"
@@ -192,13 +192,13 @@ export default function SystemsPage() {
                   onChange={(e) => setFormDesc(e.target.value)}
                   rows={3}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                  placeholder="Please enter system description"
+                  placeholder="请输入系统描述"
                 />
               </div>
 
               <div>
                 <label htmlFor="sys-gitlab-user" className="block text-sm font-medium text-gray-700 mb-1">
-                  GitLab Username
+                  GitLab 用户名
                 </label>
                 <input
                   id="sys-gitlab-user"
@@ -206,13 +206,13 @@ export default function SystemsPage() {
                   value={formGitlabUser}
                   onChange={(e) => setFormGitlabUser(e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="GitLab username"
+                  placeholder="GitLab 用户名"
                 />
               </div>
 
               <div>
                 <label htmlFor="sys-gitlab-token" className="block text-sm font-medium text-gray-700 mb-1">
-                  GitLab Password/Token
+                  GitLab 密码/Token
                 </label>
                 <input
                   id="sys-gitlab-token"
@@ -220,7 +220,7 @@ export default function SystemsPage() {
                   value={formGitlabToken}
                   onChange={(e) => setFormGitlabToken(e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Password or Access Token"
+                  placeholder="密码或 Access Token"
                 />
               </div>
 
@@ -235,14 +235,14 @@ export default function SystemsPage() {
                   onClick={closeModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  取消
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
                   className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
-                  {creating ? 'Creating...' : 'Create'}
+                  {creating ? '创建中...' : '创建'}
                 </button>
               </div>
             </form>

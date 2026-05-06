@@ -14,7 +14,7 @@ export default function Layout() {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 h-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-          <span className="text-xl font-bold text-indigo-600">AI Context</span>
+          <Link to="/" className="text-xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors">AI Context</Link>
 
           <div className="flex items-center gap-4">
             {user?.role === 'admin' && (
