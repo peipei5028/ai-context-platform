@@ -37,12 +37,12 @@ class GitNexusBridge:
             env=self._cli_env,
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
+            stderr=asyncio.subprocess.PIPE,
             preexec_fn=os.setsid,
         )
 
         try:
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         except asyncio.TimeoutError:
             try:
                 os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
@@ -50,8 +50,11 @@ class GitNexusBridge:
                 proc.kill()
             raise RuntimeError(f"CLI command timed out: {' '.join(cmd)}")
         output = stdout.decode(errors="replace")
-        logger.debug("cli %s: %d bytes", " ".join(args), len(output))
-        return proc.returncode, output, ""
+        err_output = stderr.decode(errors="replace")
+        logger.debug("cli %s: %d bytes stdout, %d bytes stderr", " ".join(args), len(output), len(err_output))
+        if err_output.strip():
+            logger.debug("cli stderr: %s", err_output[:500])
+        return proc.returncode, output, err_output
 
     # ── Git operations (system git, not gitnexus) ──
 

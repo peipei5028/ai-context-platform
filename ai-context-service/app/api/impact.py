@@ -21,8 +21,17 @@ class ImpactRequest(BaseModel):
     cross_system: bool = False
 
 
-def _get_repo_name(app: App) -> str | None:
-    return app.name
+async def _get_repo_name(app: App) -> str | None:
+    repos = await bridge.get_repos()
+    repo_path = app.repo_path
+    if repo_path:
+        for r in repos:
+            if r.get("path") == repo_path:
+                return r.get("name")
+    for r in repos:
+        if r.get("name") == app.name:
+            return app.name
+    return None
 
 
 @router.post("/apps/{app_id}/impact")
@@ -34,12 +43,14 @@ async def analyze_impact(
     app = await AppService.get_app(db, app_id)
     if not app:
         raise HTTPException(404, "App not found")
-    if app.index_status == "none":
-        raise HTTPException(400, "App has not been indexed yet")
-    if app.index_status == "indexing":
-        raise HTTPException(503, "Indexing in progress")
+    if app.index_status not in ("success", "current"):
+        if app.index_status == "none":
+            raise HTTPException(400, "App has not been indexed yet")
+        if app.index_status in ("pending", "running"):
+            raise HTTPException(503, "Indexing in progress")
+        raise HTTPException(400, f"App index status: {app.index_status}")
 
-    repo = _get_repo_name(app)
+    repo = await _get_repo_name(app)
 
     try:
         result = await _do_impact(body.target, body.direction, body.depth, repo)
@@ -56,10 +67,11 @@ async def analyze_impact(
             stmt2 = select(App).where(App.system_id == rel.target_system_id)
             target_apps = (await db.execute(stmt2)).scalars().all()
             for ta in target_apps:
-                if ta.index_status == "current":
+                if ta.index_status == "success":
                     try:
+                        ta_repo = await _get_repo_name(ta)
                         cs_result = await _do_impact(
-                            body.target, body.direction, body.depth, ta.name
+                            body.target, body.direction, body.depth, ta_repo
                         )
                         if cs_result.get("summary", {}).get("direct_upstream", 0) > 0 or \
                            cs_result.get("summary", {}).get("direct_downstream", 0) > 0:

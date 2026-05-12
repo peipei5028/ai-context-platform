@@ -56,6 +56,8 @@ export default function AppDetailPage() {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [showUploadDoc, setShowUploadDoc] = useState(false)
+  const [showIndexDialog, setShowIndexDialog] = useState(false)
+  const [indexForce, setIndexForce] = useState(false)
   const [deletingDoc, setDeletingDoc] = useState<Document | null>(null)
 
   // Edit form
@@ -105,11 +107,18 @@ export default function AppDetailPage() {
   }, [activeTab, loadDocs])
 
   // ---------- Handlers ----------
-  const handleTriggerIndex = async () => {
+  const handleTriggerIndex = () => {
+    if (submitting) return
+    setIndexForce(false)
+    setShowIndexDialog(true)
+  }
+
+  const handleConfirmIndex = async () => {
     if (!id || submitting) return
+    setShowIndexDialog(false)
     setSubmitting(true)
     try {
-      const result = await triggerIndex(id, true, true)
+      const result = await triggerIndex(id, true, indexForce)
       navigate(`/apps/${id}/index/${result.job_id}`)
     } finally {
       setSubmitting(false)
@@ -488,6 +497,60 @@ export default function AppDetailPage() {
                 className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 cursor-pointer"
               >
                 保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Index Mode Dialog ===== */}
+      {showIndexDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">触发索引</h3>
+            <p className="text-sm text-gray-600 mb-4">请选择索引模式：</p>
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="indexMode"
+                  checked={!indexForce}
+                  onChange={() => setIndexForce(false)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">增量更新</span>
+                  <p className="text-xs text-gray-500 mt-0.5">只处理变更部分，速度更快</p>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="indexMode"
+                  checked={indexForce}
+                  onChange={() => setIndexForce(true)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">强制全量</span>
+                  <p className="text-xs text-gray-500 mt-0.5">全量重新分析和生成 Wiki</p>
+                </div>
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowIndexDialog(false)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmIndex}
+                className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer"
+              >
+                确认
               </button>
             </div>
           </div>
