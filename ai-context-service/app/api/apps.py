@@ -42,11 +42,14 @@ async def create_app(
     user: User = Depends(get_current_user),
 ):
     await _check_system_permission(system_id, user, db)
-    app = await AppService.create_app(
-        db, system_id=system_id, name=body.name, git_url=body.git_url,
-        tracked_branch=body.tracked_branch, tech_stack=body.tech_stack,
-        owner=body.owner, created_by=user.id,
-    )
+    try:
+        app = await AppService.create_app(
+            db, system_id=system_id, name=body.name, git_url=body.git_url,
+            tracked_branch=body.tracked_branch, tech_stack=body.tech_stack,
+            owner=body.owner, created_by=user.id,
+        )
+    except ValueError as e:
+        raise HTTPException(409, str(e))
     if not app:
         raise HTTPException(404, "System not found")
     return app

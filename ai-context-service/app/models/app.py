@@ -9,7 +9,7 @@ from .base import Base, TimestampMixin, gen_id
 class App(TimestampMixin, Base):
     __tablename__ = "apps"
     __table_args__ = (
-        UniqueConstraint("system_id", "name", name="uq_system_app_name"),
+        UniqueConstraint("system_id", "name", "deleted", name="uq_system_app_name"),
     )
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=gen_id)

@@ -34,6 +34,16 @@ class AppService:
 
         await check_app_quota(db, system_id)
 
+        existing = await db.execute(
+            select(App).where(
+                App.system_id == system_id,
+                App.name == name,
+                App.deleted == False,  # noqa: E712
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise ValueError(f"App with name '{name}' already exists in this system")
+
         repo_path = f"{settings.REPOS_ROOT_DIR}/{system.name}/{name}"
         app = App(
             id=gen_id(),

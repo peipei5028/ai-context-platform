@@ -81,7 +81,25 @@ class GitNexusBridge:
             raise RuntimeError(f"git command timed out: git {' '.join(args)}")
         return proc.returncode, stdout.decode(), stderr.decode()
 
-    async def clone_or_pull(self, git_url: str, repo_path: str, branch: str = "main") -> None:
+    @staticmethod
+    def _inject_git_credentials(git_url: str, username: str | None, token: str | None) -> str:
+        if not username or not token:
+            logger.warning(f"No git credentials provided for {git_url}")
+            return git_url
+        from urllib.parse import urlparse, urlunparse, quote
+        parsed = urlparse(git_url)
+        if parsed.username:
+            return git_url
+        netloc = f"{quote(username, safe='')}:{quote(token, safe='')}@{parsed.hostname}"
+        if parsed.port:
+            netloc += f":{parsed.port}"
+        result = urlunparse(parsed._replace(netloc=netloc))
+        logger.info(f"Injected git credentials for {parsed.hostname}")
+        return result
+
+    async def clone_or_pull(self, git_url: str, repo_path: str, branch: str = "main",
+                            gitlab_username: str | None = None, gitlab_token: str | None = None) -> None:
+        auth_url = self._inject_git_credentials(git_url, gitlab_username, gitlab_token)
         repo_dir = Path(repo_path)
         if repo_dir.exists() and (repo_dir / ".git").exists():
             rc, out, err = await self._run_git(
@@ -92,7 +110,7 @@ class GitNexusBridge:
         else:
             repo_dir.parent.mkdir(parents=True, exist_ok=True)
             rc, out, err = await self._run_git(
-                ["clone", "-b", branch, git_url, repo_path], timeout=600
+                ["clone", "-b", branch, auth_url, repo_path], timeout=600
             )
             if rc != 0:
                 raise RuntimeError(f"git clone failed: {err}")
@@ -145,8 +163,8 @@ class GitNexusBridge:
 
     async def group_create(self, group_name: str) -> None:
         rc, _, err = await self._run_cli(["group", "create", group_name])
-        if rc != 0:
-            logger.warning(f"group create {group_name} failed (may already exist): {err}")
+        if rc != 0 and "already exists" not in err:
+            logger.warning(f"group create {group_name} failed: {err}")
 
     async def group_add(self, group_name: str, repo_path: str, registry_name: str) -> None:
         rc, _, err = await self._run_cli(

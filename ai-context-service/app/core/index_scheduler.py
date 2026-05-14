@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_session_factory
 from app.bridge.gitnexus_bridge import bridge
 from app.config import settings
+from app.core.encryption import decrypt
 from app.models.app import App
 from app.models.index_job import IndexJob
 from app.models.system import System
@@ -95,6 +96,8 @@ class IndexScheduler:
                 include_wiki=include_wiki,
                 force=force,
                 expected_version=app.version,
+                gitlab_username=system.gitlab_username if system else None,
+                gitlab_token=system.gitlab_token if system else None,
             )
         )
         task.add_done_callback(lambda t: t.exception() if not t.cancelled() and t.exception() else None)
@@ -111,6 +114,8 @@ class IndexScheduler:
         include_wiki: bool,
         force: bool,
         expected_version: int,
+        gitlab_username: str | None = None,
+        gitlab_token: str | None = None,
     ):
         async with _semaphore:
             logger.info(f"Job {job_id}: starting execution, repo={repo_path}, git_url={git_url}, branch={tracked_branch}")
@@ -149,7 +154,13 @@ class IndexScheduler:
 
                 # Step 1: clone or pull
                 await _emit_sse(job_id, "progress", {"phase": "cloning"})
-                await bridge.clone_or_pull(git_url, repo_path, tracked_branch)
+                plain_token = decrypt(gitlab_token) if gitlab_token else None
+                logger.info(f"Job {job_id}: gitlab_username={gitlab_username}, has_token={plain_token is not None}")
+                await bridge.clone_or_pull(
+                    git_url, repo_path, tracked_branch,
+                    gitlab_username=gitlab_username,
+                    gitlab_token=plain_token,
+                )
 
                 # Step 2: analyze
                 await _emit_sse(job_id, "progress", {"phase": "analyzing"})
@@ -179,6 +190,7 @@ class IndexScheduler:
                 if group_name:
                     await _emit_sse(job_id, "progress", {"phase": "syncing_group"})
                     async with _cli_lock:
+                        await bridge.group_add(group_name, repo_path, app_id)
                         await bridge.group_sync(group_name)
 
                 # Step 5: read results
